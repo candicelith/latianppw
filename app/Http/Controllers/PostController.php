@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
+
 use Illuminate\Http\Request;
 
 //return type View
@@ -23,7 +25,7 @@ class PostController extends Controller
     public function index(): View
     {
         //get posts
-        Post::latest()->paginate(5);
+        $posts = Post::latest()->paginate(5);
 
         //render view with posts
         return view('posts.index', compact('posts'));
@@ -36,7 +38,7 @@ class PostController extends Controller
      */
     public function create(): View
     {
-        return view('create');
+        return view('posts.create');
     }
 
     /**
@@ -46,7 +48,7 @@ class PostController extends Controller
      * @return RedirectResponse
      */
 
-    public function store($request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         //validate form
         $this->validate($request, [
@@ -63,7 +65,7 @@ class PostController extends Controller
         Post::create([
             'image'     => $image->hashName(),
             'title'     => $request->title,
-            'content'   => $request->content
+            'content'   => $request->get('content')
         ]);
 
         //redirect to index
@@ -76,13 +78,13 @@ class PostController extends Controller
      * @param  mixed $id
      * @return View
      */
-    public function show(): View
+    public function show(string $id): View
     {
         //get post by ID
         $post = Post::findOrFail($id);
 
         //render view with post
-        return view('posts.show', ('post'));
+        return view('posts.show', compact('post'));
     }
 
     /**
@@ -97,7 +99,7 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
 
         //render view with post
-        return view('posts.edit', compact('postsss'));
+        return view('posts.edit', compact('post'));
     }
 
     /**
@@ -131,9 +133,9 @@ class PostController extends Controller
 
             //update post with new image
             $post->update([
-                'images'     => $image->hashName(),
+                'image'     => $image->hashName(),
                 'title'     => $request->title,
-                'content'   => $request->content
+                'content'   => $request->get('content')
             ]);
 
         } else {
@@ -141,7 +143,7 @@ class PostController extends Controller
             //update post without image
             $post->update([
                 'title'     => $request->title,
-                'content'   => $request->content
+                'content'   => $request->get('content')
             ]);
         }
 
@@ -153,7 +155,7 @@ class PostController extends Controller
      * destroy
      *
      * @param  mixed $post
-     * @return void
+     * @return RedirectResponse
      */
 
     public function destroy(string $id): RedirectResponse
@@ -162,10 +164,10 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
 
         //delete image
-        Storage::delete('public/po  sts/'. $post->image);
+        Storage::delete('public/posts/'. $post->image);
 
         //delete post
-        $post->deled();
+        $post->delete();
 
         //redirect to index
         return redirect()->route('posts.index')->with(['success' => 'Data Berhasil Dihapus!']);
